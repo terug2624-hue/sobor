@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Собор: Расписание v41</title>
+    <title>Собор: Расписание v42</title>
     <style>
         :root { --blue: #1a365d; --green: #27ae60; --orange: #f39c12; --gray: #f8f9fa; }
         body { font-family: -apple-system, sans-serif; background: #e9ecef; margin: 0; padding: 10px; }
@@ -43,15 +43,19 @@
         .btn-share-link { background: #2980b9; }
         .del-btn { position: absolute; top: 5px; right: 5px; background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 4px 8px; z-index: 10; }
         
+        /* Кнопка возврата */
+        .exit-viewer { text-align: center; margin: 20px 0; color: var(--blue); font-weight: bold; cursor: pointer; text-decoration: underline; display: none; }
+
         body.view-only .no-print, body.view-only .del-btn, body.view-only .controls-sticky, body.view-only .fest-card::before { display: none !important; }
         body.view-only select { border: none !important; background: none !important; appearance: none; pointer-events: none; font-size: 13px; color: black !important; padding: 0; font-weight: 900; white-space: nowrap; }
         body.view-only .sun-header-input { border: none; font-size: 14px; width: auto; }
+        body.view-only .exit-viewer { display: block !important; }
 
         @media print {
             @page { size: A4 portrait; margin: 8mm; }
             body { background: white; padding: 0; }
             .container { box-shadow: none; padding: 0; max-width: 100%; border: none; }
-            .no-print, .controls-sticky, .del-btn { display: none !important; }
+            .no-print, .controls-sticky, .del-btn, .exit-viewer { display: none !important; }
             #main-schedule { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 5pt !important; }
             .day-card { border: 1pt solid black !important; margin-bottom: 0 !important; border-radius: 0 !important; page-break-inside: avoid; margin-left: 0 !important; }
             .day-header { background: #f0f0f0 !important; color: black !important; border-bottom: 1pt solid black; padding: 2pt !important; font-size: 10pt !important; }
@@ -91,16 +95,12 @@
         <button class="btn btn-print" onclick="window.print()">🖨️ Печать</button>
         <button class="btn btn-share-link" onclick="shareAsLink()">🔗 Ссылка</button>
     </div>
-    <div class="exit-viewer no-print" style="display:none; text-align:center; margin-top:10px; cursor:pointer; color:var(--blue); font-weight:bold" onclick="toggleView(false)">← Вернуться в редактор</div>
+    
+    <div class="exit-viewer" onclick="toggleView(false)">← Вернуться в редактор</div>
 </div>
 
 <script>
-    // --- ВШИТЫЕ ИМЕНА ---
-    const fixedNames = [
-        "Архиерей", "о.Андрей", "о.Владимир", "о.Алексий", "о.Сергий", 
-        "о.Виктор", "о.Ал-р Ал.", "о.Ал-р Л.", "о.Павел", "о.Олег"
-    ];
-
+    const fixedNames = ["Архиерей", "о.Андрей", "о.Владимир", "о.Алексий", "о.Сергий", "о.Виктор", "о.Ал-р Ал.", "о.Ал-р Л.", "о.Павел", "о.Олег"];
     const weekdayNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
     const serviceTypes = ["", "Полиелей (служ.)", "Полиелей (все)", "Всенощная (все)", "Праздник (заменить этот день)"];
     const rolesEvGrid = ["Исповедь", "Панихида", "Помазание 1", "Помазание 2"];
@@ -236,7 +236,7 @@
     }
 
     function save() {
-        localStorage.setItem('church_v41', JSON.stringify(collectData()));
+        localStorage.setItem('church_v42', JSON.stringify(collectData()));
         const b = document.getElementById('save-btn'); b.innerText = '✅ ОК';
         setTimeout(() => b.innerText = '💾 СОХР', 1000);
     }
@@ -244,7 +244,6 @@
     function toggleView(isView) {
         if(isView) document.body.classList.add('view-only');
         else document.body.classList.remove('view-only');
-        document.querySelector('.exit-viewer').style.display = isView ? 'block' : 'none';
     }
 
     function shareAsLink() {
@@ -261,7 +260,7 @@
         if(hash && hash.includes('data=')) {
             try { applyData(JSON.parse(decodeURIComponent(escape(atob(hash.split('data=')[1]))))); toggleView(true); } catch(e) {}
         } else {
-            const s = JSON.parse(localStorage.getItem('church_v41'));
+            const s = JSON.parse(localStorage.getItem('church_v42'));
             if(s) applyData(s);
         }
     };
