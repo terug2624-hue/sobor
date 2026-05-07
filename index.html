@@ -3,23 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Собор: Расписание v31</title>
+    <title>Собор: Расписание v40</title>
     <style>
         :root { --blue: #1a365d; --green: #27ae60; --orange: #f39c12; --gray: #f8f9fa; }
         body { font-family: -apple-system, sans-serif; background: #e9ecef; margin: 0; padding: 10px; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: var(--blue); font-size: 1.3rem; text-transform: uppercase; margin: 5px 0; }
+        
+        /* Стили для заголовка Воскресенья с инпутом */
+        .sun-header-input {
+            background: transparent;
+            border: none;
+            color: white;
+            text-align: center;
+            font-weight: 900;
+            width: 60%;
+            font-size: 14px;
+            border-bottom: 1px dashed rgba(255,255,255,0.5);
+            margin-left: 10px;
+            outline: none;
+        }
+        .sun-header-input::placeholder { color: rgba(255,255,255,0.6); font-weight: normal; font-size: 12px; }
+
         details summary { padding: 12px; background: var(--blue); color: white; border-radius: 8px; cursor: pointer; font-weight: bold; list-style: none; }
         .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         input, select { padding: 10px; border: 2px solid #ced4da; border-radius: 8px; font-weight: 900; font-size: 15px; width: 100%; box-sizing: border-box; }
         
-        /* Карточки для экрана */
-        .day-card { background: white; border: 2px solid #343a40; margin-bottom: 12px; border-radius: 10px; overflow: hidden; }
-        .day-header { background: #343a40; color: white; padding: 8px; text-align: center; font-weight: 900; font-size: 14px; }
+        .day-card { background: white; border: 2px solid #343a40; margin-bottom: 12px; border-radius: 10px; overflow: hidden; position: relative; }
+        .day-header { background: #343a40; color: white; padding: 8px; text-align: center; font-weight: 900; font-size: 14px; display: flex; justify-content: center; align-items: center; }
         .day-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
         
+        .day-body.hidden-by-fest { display: none !important; }
+
+        .fest-card { border-color: var(--orange); margin-left: 15px; border-style: dashed; }
+        .fest-card::before { content: "↳ ПРАЗДНИК"; position: absolute; left: -15px; top: -10px; color: var(--orange); font-size: 9px; font-weight: bold; background: white; padding: 0 4px; }
+
         .service-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .service-col { display: flex; flex-direction: column; gap: 4px; }
         .label-min { font-size: 10px; color: #6c757d; text-transform: uppercase; font-weight: bold; }
         
         .fest-grid { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 10px; }
@@ -34,49 +53,23 @@
         .btn-view { background: var(--orange); }
         .btn-print { background: #34495e; }
         .btn-share-link { background: #2980b9; }
-        .btn-share-text { background: var(--green); }
-        .btn-add { background: #6f42c1; width: 100%; margin: 10px 0; }
-        .del-btn { position: absolute; top: 5px; right: 5px; background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 4px 8px; }
+        .del-btn { position: absolute; top: 5px; right: 5px; background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 4px 8px; z-index: 10; }
         
-        body.view-only .no-print, body.view-only .del-btn, body.view-only .controls-sticky, body.view-only .btn-add { display: none !important; }
-        body.view-only select { border: none !important; background: none !important; appearance: none; pointer-events: none; font-size: 14px; color: black !important; padding: 0; font-weight: 900; }
-        .exit-viewer { display: none; text-align: center; margin: 15px 0; color: var(--blue); font-weight: bold; cursor: pointer; text-decoration: underline; }
-        body.view-only .exit-viewer { display: block !important; }
-        body.guest-mode .exit-viewer { display: none !important; }
+        body.view-only .no-print, body.view-only .del-btn, body.view-only .controls-sticky, body.view-only .fest-card::before { display: none !important; }
+        body.view-only .fest-card { margin-left: 0; border-style: solid; }
+        body.view-only select { border: none !important; background: none !important; appearance: none; pointer-events: none; font-size: 13px; color: black !important; padding: 0; font-weight: 900; white-space: nowrap; }
+        body.view-only .sun-header-input { border: none; font-size: 14px; width: auto; margin-left: 5px; }
 
-        /* УМНАЯ ПЕЧАТЬ (А4 ОДИН ЛИСТ) */
         @media print {
             @page { size: A4 portrait; margin: 8mm; }
             body { background: white; padding: 0; }
             .container { box-shadow: none; padding: 0; max-width: 100%; border: none; }
-            .no-print, .controls-sticky, .btn-add, .del-btn, .exit-viewer { display: none !important; }
-            
-            h1 { font-size: 14pt; margin-bottom: 5px; color: black !important; }
-            
-            /* Воскресенье на всю ширину, но компактно */
-            #sunday-special .day-card { border: 1.5pt solid black !important; margin-bottom: 5px; }
-            #sun-container { grid-template-columns: 1fr 1.2fr !important; gap: 15px !important; padding: 5px !important; }
-            
-            /* Сетка для будней в две колонки */
-            #main-schedule { 
-                display: grid !important; 
-                grid-template-columns: 1fr 1fr !important; 
-                gap: 5pt !important; 
-            }
-            
-            .day-card { border: 1pt solid black !important; margin-bottom: 0 !important; border-radius: 0 !important; page-break-inside: avoid; }
+            .no-print, .controls-sticky, .del-btn { display: none !important; }
+            #main-schedule { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 5pt !important; }
+            .day-card { border: 1pt solid black !important; margin-bottom: 0 !important; border-radius: 0 !important; page-break-inside: avoid; margin-left: 0 !important; }
             .day-header { background: #f0f0f0 !important; color: black !important; border-bottom: 1pt solid black; padding: 2pt !important; font-size: 10pt !important; }
-            .day-body { padding: 4pt !important; gap: 4pt !important; }
-            
-            .vk-box { border: 1pt dashed black !important; padding: 4pt !important; margin-bottom: 5pt !important; background: none !important; }
-            
-            select { border: none !important; appearance: none; font-size: 9pt !important; font-weight: bold !important; color: black !important; background: none !important; padding: 0 !important; }
-            .label-min { font-size: 7pt !important; color: #333 !important; }
-            
-            .service-row { gap: 4pt !important; }
-            .morning-row, .evening-grid { gap: 4pt !important; margin-bottom: 2pt !important; }
-            
-            strong { font-size: 9pt; }
+            .sun-header-input { color: black !important; border: none !important; width: auto !important; }
+            select { border: none !important; appearance: none; font-size: 9pt !important; font-weight: bold !important; color: black !important; background: none !important; padding: 0 !important; display: block; width: 100%; }
         }
     </style>
 </head>
@@ -97,7 +90,11 @@
 
     <div id="sunday-special">
         <div class="day-card" style="border-color: var(--blue);">
-            <div class="day-header" style="background: var(--blue);">ВОСКРЕСЕНЬЕ <span id="date-0"></span></div>
+            <div class="day-header" style="background: var(--blue);">
+                ВОСКРЕСЕНЬЕ 
+                <input type="text" id="sun-fest-name" class="sun-header-input" placeholder="Название праздника...">
+                <span id="date-0" style="margin-left:5px"></span>
+            </div>
             <div id="sun-container" class="fest-grid"></div>
         </div>
     </div>
@@ -109,45 +106,63 @@
 
     <div id="main-schedule"></div>
 
-    <div id="fest-section">
-        <div id="fest-container"></div>
-        <button class="btn btn-add no-print" onclick="addFest()">+ Добавить праздник</button>
-    </div>
-
     <div class="controls-sticky no-print">
         <button id="save-btn" class="btn btn-save" onclick="save()">💾 Сохр</button>
         <button class="btn btn-view" onclick="toggleView(true)">👁️ Вид</button>
         <button class="btn btn-print" onclick="window.print()">🖨️ Печать</button>
         <button class="btn btn-share-link" onclick="shareAsLink()">🔗 Ссылка</button>
-        <button class="btn btn-share-text" onclick="shareAsText()">📝 Текст</button>
     </div>
-    <div class="exit-viewer" onclick="toggleView(false)">← Вернуться в редактор</div>
+    <div class="exit-viewer no-print" style="display:none; text-align:center; margin-top:10px; cursor:pointer; color:var(--blue); font-weight:bold" onclick="toggleView(false)">← Вернуться в редактор</div>
 </div>
 
 <script>
+    const defaultNames = ["Архиерей", "о.Андрей", "о.Владимир", "о.Алексий", "о.Сергий", "о.Виктор", "о.Ал-р Ал.", "о.Ал-р Л.", "о.Павел", "о.Олег"];
     const weekdayNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-    const serviceTypes = ["", "Полиелей (служ.)", "Полиелей (все)", "Всенощная (все)"];
-    const rolesEvTop = "Всенощная";
+    const serviceTypes = ["", "Полиелей (служ.)", "Полиелей (все)", "Всенощная (все)", "Праздник (заменить этот день)"];
     const rolesEvGrid = ["Исповедь", "Панихида", "Помазание 1", "Помазание 2"];
-    const rolesMorSun = ["Ранняя Лит.", "Требный (ран)", "Поздняя Лит.", "Требный (позд)", "Проповедь", "Панихида (утро)"];
 
     const pContainer = document.getElementById('p-inputs');
-    for(let i=0; i<10; i++) pContainer.innerHTML += `<input type="text" class="p-input" placeholder="Отец ${i+1}" oninput="syncSelects()">`;
+    for(let i=0; i<10; i++) pContainer.innerHTML += `<input type="text" class="p-input" placeholder="Имя ${i+1}" value="${defaultNames[i] || ''}" oninput="syncSelects()">`;
 
-    const schedule = document.getElementById('main-schedule');
+    const mainSchedule = document.getElementById('main-schedule');
     weekdayNames.forEach((d, i) => {
-        schedule.innerHTML += `
-            <div class="day-card">
-                <div class="day-header">${d} <span id="date-${i+1}"></span></div>
-                <div class="day-body">
-                    <div class="service-row"><div class="service-col"><span class="label-min">Вечер</span><select class="w-type" style="color: var(--blue);">${serviceTypes.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div><div class="service-col"><span class="label-min">Утро</span><select class="w-priest"></select></div></div>
-                    <div class="service-row"><div><span class="label-min">Требный</span><select class="w-treb"></select></div><div><span class="label-min">Дежурный</span><select class="w-dezh"></select></div></div>
+        const dayId = i + 1;
+        mainSchedule.innerHTML += `
+            <div class="day-group" id="group-${dayId}">
+                <div class="day-card" id="card-${dayId}">
+                    <div class="day-header" id="header-${dayId}">${d} <span id="date-${dayId}"></span></div>
+                    <div class="day-body" id="body-${dayId}">
+                        <div class="service-row">
+                            <div class="service-col"><span class="label-min">Вечер</span><select class="w-type" onchange="checkFestTrigger(this, ${dayId})">${serviceTypes.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+                            <div class="service-col"><span class="label-min">Утро</span><select class="w-priest"></select></div>
+                        </div>
+                        <div class="service-row">
+                            <div><span class="label-min">Требный</span><select class="w-treb"></select></div>
+                            <div><span class="label-min">Дежурный</span><select class="w-dezh"></select></div>
+                        </div>
+                    </div>
                 </div>
+                <div class="fest-sub-container" id="fest-sub-${dayId}"></div>
             </div>`;
     });
 
+    function checkFestTrigger(selectEl, dayId) {
+        if (selectEl.value === "Праздник (заменить этот день)") {
+            addFest(null, dayId);
+            selectEl.value = "";
+            updateDayVisibility(dayId);
+        }
+    }
+
+    function updateDayVisibility(dayId) {
+        const body = document.getElementById(`body-${dayId}`);
+        const festContainer = document.getElementById(`fest-sub-${dayId}`);
+        if (festContainer && festContainer.children.length > 0) body.classList.add('hidden-by-fest');
+        else body.classList.remove('hidden-by-fest');
+    }
+
     function getEveningHTML(className) {
-        return `<div style="margin-bottom:4px;"><span class="label-min">${rolesEvTop}</span><select class="${className}"></select></div>
+        return `<div style="margin-bottom:4px;"><span class="label-min">Всенощная</span><select class="${className}"></select></div>
                 <div class="evening-grid">${rolesEvGrid.map(r => `<div><span class="label-min">${r}</span><select class="${className}"></select></div>`).join('')}</div>`;
     }
 
@@ -161,19 +176,25 @@
 
     function syncSelects() {
         const names = Array.from(document.querySelectorAll('.p-input')).map(el => el.value.trim()).filter(n => n);
-        document.querySelectorAll('.w-priest, .w-dezh, .w-treb, .f-sel, .sun-sel, #vk-priest').forEach(s => {
+        document.querySelectorAll('select:not(.w-type)').forEach(s => {
             const val = s.value;
             s.innerHTML = '<option></option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
             s.value = val;
         });
     }
 
-    function addFest(data = null) {
-        const id = Date.now();
+    function removeFest(btn, pId) {
+        btn.parentElement.remove();
+        updateDayVisibility(pId);
+        save();
+    }
+
+    function addFest(data = null, parentDayId = null) {
+        const pId = data ? data.pid : parentDayId;
         const div = document.createElement('div');
         div.className = 'fest-card day-card';
-        div.id = 'f-' + id;
-        div.innerHTML = `<button class="del-btn no-print" onclick="this.parentElement.remove(); save();">✕</button>
+        div.dataset.pid = pId;
+        div.innerHTML = `<button class="del-btn no-print" onclick="removeFest(this, ${pId})">✕</button>
             <div class="day-header" style="background:var(--orange)"><input type="text" class="f-title" placeholder="НАЗВАНИЕ ПРАЗДНИКА" style="background:transparent; border:none; color:white; text-align:center; width:80%; font-weight:900;" value="${data ? data.t : ''}"></div>
             <div class="fest-grid" style="padding:10px">
                 <div><strong>Вечер накануне:</strong>${getEveningHTML('f-sel')}</div>
@@ -183,9 +204,10 @@
                     <div class="morning-row"><div><span class="label-min">Проповедь</span><select class="f-sel"></select></div><div><span class="label-min">Панихида</span><select class="f-sel"></select></div></div>
                 </div>
             </div>`;
-        document.getElementById('fest-container').appendChild(div);
+        document.getElementById(`fest-sub-${pId}`).appendChild(div);
         syncSelects();
         if(data) { const sels = div.querySelectorAll('select'); data.r.forEach((v, i) => { if(sels[i]) sels[i].value = v; }); }
+        updateDayVisibility(pId);
     }
 
     function refreshDates() {
@@ -195,7 +217,8 @@
             document.getElementById(`date-0`).innerText = `| ${start.toLocaleDateString('ru-RU')}`;
             for(let i=1; i<=6; i++) {
                 const c = new Date(start); c.setDate(start.getDate() + i);
-                document.getElementById(`date-${i}`).innerText = `| ${c.toLocaleDateString('ru-RU')}`;
+                const target = document.getElementById(`date-${i}`);
+                if(target) target.innerText = `| ${c.toLocaleDateString('ru-RU')}`;
             }
         }
     }
@@ -208,9 +231,14 @@
             wtr: Array.from(document.querySelectorAll('.w-treb')).map(el => el.value),
             wd: Array.from(document.querySelectorAll('.w-dezh')).map(el => el.value),
             sun: Array.from(document.querySelectorAll('.sun-sel')).map(s => s.value),
+            sunFest: document.getElementById('sun-fest-name').value,
             vk: document.getElementById('vk-priest').value,
             d: document.getElementById('start-date').value,
-            f: Array.from(document.querySelectorAll('.fest-card')).map(c => ({ t: c.querySelector('.f-title').value, r: Array.from(c.querySelectorAll('select')).map(s => s.value) }))
+            f: Array.from(document.querySelectorAll('.fest-card')).map(c => ({ 
+                t: c.querySelector('.f-title').value, 
+                pid: c.dataset.pid,
+                r: Array.from(c.querySelectorAll('select')).map(s => s.value) 
+            }))
         };
     }
 
@@ -219,68 +247,44 @@
         if(s.p) document.querySelectorAll('.p-input').forEach((el, i) => el.value = s.p[i] || '');
         syncSelects();
         if(s.d) { document.getElementById('start-date').value = s.d; refreshDates(); }
+        if(s.sunFest) document.getElementById('sun-fest-name').value = s.sunFest;
         if(s.vk) document.getElementById('vk-priest').value = s.vk;
         if(s.wp) document.querySelectorAll('.w-priest').forEach((el, i) => el.value = s.wp[i] || '');
         if(s.wt) document.querySelectorAll('.w-type').forEach((el, i) => el.value = s.wt[i] || '');
         if(s.wtr) document.querySelectorAll('.w-treb').forEach((el, i) => el.value = s.wtr[i] || '');
         if(s.wd) document.querySelectorAll('.w-dezh').forEach((el, i) => el.value = s.wd[i] || '');
         if(s.sun) document.querySelectorAll('.sun-sel').forEach((el, i) => el.value = s.sun[i] || '');
-        if(s.f) { document.getElementById('fest-container').innerHTML = ''; s.f.forEach(fData => addFest(fData)); }
+        if(s.f) { document.querySelectorAll('.fest-sub-container').forEach(c => c.innerHTML = ''); s.f.forEach(fData => addFest(fData)); }
+        for(let i=1; i<=6; i++) updateDayVisibility(i);
     }
 
     function save() {
-        localStorage.setItem('church_v31', JSON.stringify(collectData()));
+        localStorage.setItem('church_v40', JSON.stringify(collectData()));
         const b = document.getElementById('save-btn'); b.innerText = '✅ ОК';
         setTimeout(() => b.innerText = '💾 СОХР', 1000);
     }
 
     function toggleView(isView) {
-        if(isView) { document.body.classList.add('view-only'); document.getElementById('main-title').innerText = "РАСПИСАНИЕ (ПРОСМОТР)"; window.scrollTo(0,0); }
-        else { document.body.classList.remove('view-only'); document.getElementById('main-title').innerText = "Расписание Собора"; }
+        if(isView) document.body.classList.add('view-only');
+        else document.body.classList.remove('view-only');
+        document.querySelector('.exit-viewer').style.display = isView ? 'block' : 'none';
     }
 
     function shareAsLink() {
-        const data = JSON.stringify(collectData());
-        const encodedData = btoa(unescape(encodeURIComponent(data)));
-        const baseUrl = window.location.href.split('#')[0];
-        const url = baseUrl + '#data=' + encodedData + '&mode=guest';
+        const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(collectData()))));
+        const url = window.location.href.split('#')[0] + '#data=' + encodedData;
         const el = document.createElement('textarea'); el.value = url; document.body.appendChild(el); el.select();
         document.execCommand('copy'); document.body.removeChild(el);
-        alert("Ссылка для коллег скопирована!");
-    }
-
-    function shareAsText() {
-        const data = collectData();
-        let m = `📋 *РАСПИСАНИЕ СОБОРА*\n`;
-        if(data.d) { m += `📅 Неделя с ${new Date(data.d).toLocaleDateString('ru-RU')}\n`; }
-        m += `🤫 *Неделя ВК:* ${data.vk || '—'}\n\n`;
-        m += `⛪ *ВОСКРЕСЕНЬЕ*\n• Вечер: ${data.sun[0] || '—'}\n`;
-        rolesEvGrid.forEach((r, i) => m += `• ${r}: ${data.sun[i+1] || '—'}\n`);
-        rolesMorSun.forEach((r, i) => m += `• ${r}: ${data.sun[i+5] || '—'}\n`);
-        m += `\n`;
-        weekdayNames.forEach((name, i) => {
-            m += `📅 *${name.toUpperCase()}*\n`;
-            if(data.wt[i]) m += `• Вечер: ${data.wt[i]}\n`;
-            m += `• Утро: ${data.wp[i] || '—'}\n• Требный: ${data.wtr[i] || '—'}\n• Дежурный: ${data.wd[i] || '—'}\n\n`;
-        });
-        const el = document.createElement('textarea'); el.value = m; document.body.appendChild(el); el.select();
-        document.execCommand('copy'); document.body.removeChild(el);
-        alert("Текст скопирован!");
+        alert("Ссылка скопирована!");
     }
 
     window.onload = () => {
         syncSelects();
         const hash = window.location.hash;
         if(hash && hash.includes('data=')) {
-            try {
-                const rawData = hash.split('data=')[1].split('&')[0];
-                const decodedData = JSON.parse(decodeURIComponent(escape(atob(rawData))));
-                applyData(decodedData);
-                toggleView(true);
-                if(hash.includes('mode=guest')) document.body.classList.add('guest-mode');
-            } catch(e) { console.error(e); }
+            try { applyData(JSON.parse(decodeURIComponent(escape(atob(hash.split('data=')[1]))))); toggleView(true); } catch(e) {}
         } else {
-            const s = JSON.parse(localStorage.getItem('church_v31'));
+            const s = JSON.parse(localStorage.getItem('church_v40'));
             if(s) applyData(s);
         }
     };
