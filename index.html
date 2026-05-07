@@ -3,36 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Собор: Расписание v40</title>
+    <title>Собор: Расписание v41</title>
     <style>
         :root { --blue: #1a365d; --green: #27ae60; --orange: #f39c12; --gray: #f8f9fa; }
         body { font-family: -apple-system, sans-serif; background: #e9ecef; margin: 0; padding: 10px; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--blue); font-size: 1.3rem; text-transform: uppercase; margin: 5px 0; }
         
-        /* Стили для заголовка Воскресенья с инпутом */
-        .sun-header-input {
-            background: transparent;
-            border: none;
-            color: white;
-            text-align: center;
-            font-weight: 900;
-            width: 60%;
-            font-size: 14px;
-            border-bottom: 1px dashed rgba(255,255,255,0.5);
-            margin-left: 10px;
-            outline: none;
-        }
+        header { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 15px; }
+        h1 { color: var(--blue); font-size: 1.3rem; text-transform: uppercase; margin: 0; }
+        .date-picker-main { padding: 8px; border: 2px solid var(--blue); border-radius: 8px; font-weight: bold; font-family: inherit; }
+
+        .sun-header-input { background: transparent; border: none; color: white; text-align: center; font-weight: 900; width: 50%; font-size: 14px; border-bottom: 1px dashed rgba(255,255,255,0.5); outline: none; margin: 0 5px; }
         .sun-header-input::placeholder { color: rgba(255,255,255,0.6); font-weight: normal; font-size: 12px; }
 
-        details summary { padding: 12px; background: var(--blue); color: white; border-radius: 8px; cursor: pointer; font-weight: bold; list-style: none; }
-        .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         input, select { padding: 10px; border: 2px solid #ced4da; border-radius: 8px; font-weight: 900; font-size: 15px; width: 100%; box-sizing: border-box; }
         
         .day-card { background: white; border: 2px solid #343a40; margin-bottom: 12px; border-radius: 10px; overflow: hidden; position: relative; }
-        .day-header { background: #343a40; color: white; padding: 8px; text-align: center; font-weight: 900; font-size: 14px; display: flex; justify-content: center; align-items: center; }
+        .day-header { background: #343a40; color: white; padding: 8px; text-align: center; font-weight: 900; font-size: 14px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; }
         .day-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-        
         .day-body.hidden-by-fest { display: none !important; }
 
         .fest-card { border-color: var(--orange); margin-left: 15px; border-style: dashed; }
@@ -56,9 +44,8 @@
         .del-btn { position: absolute; top: 5px; right: 5px; background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 4px 8px; z-index: 10; }
         
         body.view-only .no-print, body.view-only .del-btn, body.view-only .controls-sticky, body.view-only .fest-card::before { display: none !important; }
-        body.view-only .fest-card { margin-left: 0; border-style: solid; }
         body.view-only select { border: none !important; background: none !important; appearance: none; pointer-events: none; font-size: 13px; color: black !important; padding: 0; font-weight: 900; white-space: nowrap; }
-        body.view-only .sun-header-input { border: none; font-size: 14px; width: auto; margin-left: 5px; }
+        body.view-only .sun-header-input { border: none; font-size: 14px; width: auto; }
 
         @media print {
             @page { size: A4 portrait; margin: 8mm; }
@@ -68,7 +55,6 @@
             #main-schedule { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 5pt !important; }
             .day-card { border: 1pt solid black !important; margin-bottom: 0 !important; border-radius: 0 !important; page-break-inside: avoid; margin-left: 0 !important; }
             .day-header { background: #f0f0f0 !important; color: black !important; border-bottom: 1pt solid black; padding: 2pt !important; font-size: 10pt !important; }
-            .sun-header-input { color: black !important; border: none !important; width: auto !important; }
             select { border: none !important; appearance: none; font-size: 9pt !important; font-weight: bold !important; color: black !important; background: none !important; padding: 0 !important; display: block; width: 100%; }
         }
     </style>
@@ -76,24 +62,17 @@
 <body>
 
 <div class="container">
-    <h1 id="main-title">Расписание Собора</h1>
-
-    <div class="no-print">
-        <details id="settings">
-            <summary>⚙️ Настройки (Имена)</summary>
-            <div style="background:#f8f9fa; padding:10px; border-radius:8px;">
-                <div id="p-inputs" class="p-grid"></div>
-                <div style="margin-top:10px;"><span class="label-min">Дата (Воскресенье):</span><input type="date" id="start-date" onchange="refreshDates()"></div>
-            </div>
-        </details>
-    </div>
+    <header class="no-print">
+        <h1>Расписание Собора</h1>
+        <input type="date" id="start-date" class="date-picker-main" onchange="refreshDates()">
+    </header>
 
     <div id="sunday-special">
         <div class="day-card" style="border-color: var(--blue);">
             <div class="day-header" style="background: var(--blue);">
                 ВОСКРЕСЕНЬЕ 
-                <input type="text" id="sun-fest-name" class="sun-header-input" placeholder="Название праздника...">
-                <span id="date-0" style="margin-left:5px"></span>
+                <input type="text" id="sun-fest-name" class="sun-header-input" placeholder="Праздник...">
+                <span id="date-0"></span>
             </div>
             <div id="sun-container" class="fest-grid"></div>
         </div>
@@ -116,13 +95,15 @@
 </div>
 
 <script>
-    const defaultNames = ["Архиерей", "о.Андрей", "о.Владимир", "о.Алексий", "о.Сергий", "о.Виктор", "о.Ал-р Ал.", "о.Ал-р Л.", "о.Павел", "о.Олег"];
+    // --- ВШИТЫЕ ИМЕНА ---
+    const fixedNames = [
+        "Архиерей", "о.Андрей", "о.Владимир", "о.Алексий", "о.Сергий", 
+        "о.Виктор", "о.Ал-р Ал.", "о.Ал-р Л.", "о.Павел", "о.Олег"
+    ];
+
     const weekdayNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
     const serviceTypes = ["", "Полиелей (служ.)", "Полиелей (все)", "Всенощная (все)", "Праздник (заменить этот день)"];
     const rolesEvGrid = ["Исповедь", "Панихида", "Помазание 1", "Помазание 2"];
-
-    const pContainer = document.getElementById('p-inputs');
-    for(let i=0; i<10; i++) pContainer.innerHTML += `<input type="text" class="p-input" placeholder="Имя ${i+1}" value="${defaultNames[i] || ''}" oninput="syncSelects()">`;
 
     const mainSchedule = document.getElementById('main-schedule');
     weekdayNames.forEach((d, i) => {
@@ -175,10 +156,9 @@
         </div>`;
 
     function syncSelects() {
-        const names = Array.from(document.querySelectorAll('.p-input')).map(el => el.value.trim()).filter(n => n);
         document.querySelectorAll('select:not(.w-type)').forEach(s => {
             const val = s.value;
-            s.innerHTML = '<option></option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
+            s.innerHTML = '<option></option>' + fixedNames.map(n => `<option value="${n}">${n}</option>`).join('');
             s.value = val;
         });
     }
@@ -225,7 +205,6 @@
 
     function collectData() {
         return {
-            p: Array.from(document.querySelectorAll('.p-input')).map(el => el.value),
             wp: Array.from(document.querySelectorAll('.w-priest')).map(el => el.value),
             wt: Array.from(document.querySelectorAll('.w-type')).map(el => el.value),
             wtr: Array.from(document.querySelectorAll('.w-treb')).map(el => el.value),
@@ -244,8 +223,6 @@
 
     function applyData(s) {
         if(!s) return;
-        if(s.p) document.querySelectorAll('.p-input').forEach((el, i) => el.value = s.p[i] || '');
-        syncSelects();
         if(s.d) { document.getElementById('start-date').value = s.d; refreshDates(); }
         if(s.sunFest) document.getElementById('sun-fest-name').value = s.sunFest;
         if(s.vk) document.getElementById('vk-priest').value = s.vk;
@@ -259,7 +236,7 @@
     }
 
     function save() {
-        localStorage.setItem('church_v40', JSON.stringify(collectData()));
+        localStorage.setItem('church_v41', JSON.stringify(collectData()));
         const b = document.getElementById('save-btn'); b.innerText = '✅ ОК';
         setTimeout(() => b.innerText = '💾 СОХР', 1000);
     }
@@ -284,7 +261,7 @@
         if(hash && hash.includes('data=')) {
             try { applyData(JSON.parse(decodeURIComponent(escape(atob(hash.split('data=')[1]))))); toggleView(true); } catch(e) {}
         } else {
-            const s = JSON.parse(localStorage.getItem('church_v40'));
+            const s = JSON.parse(localStorage.getItem('church_v41'));
             if(s) applyData(s);
         }
     };
