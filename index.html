@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Собор: Расписание v26</title>
+    <title>Собор: Расписание v27</title>
     <style>
         :root { --blue: #1a365d; --green: #27ae60; --orange: #f39c12; --gray: #f8f9fa; }
         body { font-family: -apple-system, sans-serif; background: #e9ecef; margin: 0; padding: 10px; }
@@ -30,10 +30,16 @@
         .btn-share-text { background: var(--green); }
         .btn-add { background: #6f42c1; width: 100%; margin: 15px 0; }
         .del-btn { position: absolute; top: 5px; right: 5px; background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 4px 8px; }
+        
+        /* Стили для режима просмотра */
         body.view-only .no-print, body.view-only .del-btn, body.view-only .controls-sticky, body.view-only .btn-add { display: none !important; }
         body.view-only select { border: none !important; background: none !important; appearance: none; pointer-events: none; font-size: 16px; color: black !important; padding: 0; font-weight: 900; }
+        
         .exit-viewer { display: none; text-align: center; margin: 20px 0; color: var(--blue); font-weight: bold; cursor: pointer; text-decoration: underline; }
         body.view-only .exit-viewer { display: block !important; }
+        
+        /* Специальный класс для полной блокировки (скрывает даже кнопку выхода) */
+        body.guest-mode .exit-viewer { display: none !important; }
     </style>
 </head>
 <body>
@@ -85,7 +91,6 @@
     const serviceTypes = ["", "Полиелей (служ.)", "Полиелей (все)", "Всенощная (все)"];
     const rolesEvTop = "Всенощная";
     const rolesEvGrid = ["Исповедь", "Панихида", "Помазание 1", "Помазание 2"];
-    const rolesMor = ["Ранняя Лит.", "Требный (ран)", "Поздняя Лит.", "Требный (позд)", "Проповедь", "Панихида (утро)"];
 
     const pContainer = document.getElementById('p-inputs');
     for(let i=0; i<10; i++) pContainer.innerHTML += `<input type="text" class="p-input" placeholder="Отец ${i+1}" oninput="syncSelects()">`;
@@ -188,26 +193,32 @@
     }
 
     function save() {
-        localStorage.setItem('church_v26', JSON.stringify(collectData()));
+        localStorage.setItem('church_v27', JSON.stringify(collectData()));
         const b = document.getElementById('save-btn'); b.innerText = '✅ ОК';
         setTimeout(() => b.innerText = '💾 СОХР', 1000);
     }
 
     function toggleView(isView) {
-        if(isView) { document.body.classList.add('view-only'); document.getElementById('main-title').innerText = "РАСПИСАНИЕ (ПРОСМОТР)"; window.scrollTo(0,0); }
-        else { document.body.classList.remove('view-only'); document.getElementById('main-title').innerText = "Расписание Собора"; }
+        if(isView) { 
+            document.body.classList.add('view-only'); 
+            document.getElementById('main-title').innerText = "РАСПИСАНИЕ (ПРОСМОТР)"; 
+            window.scrollTo(0,0); 
+        } else { 
+            document.body.classList.remove('view-only'); 
+            document.getElementById('main-title').innerText = "Расписание Собора"; 
+        }
     }
 
     function shareAsLink() {
         const data = JSON.stringify(collectData());
         const encodedData = btoa(unescape(encodeURIComponent(data)));
-        // Универсальный способ получения текущего адреса страницы
         const baseUrl = window.location.href.split('#')[0];
-        const url = baseUrl + '#' + encodedData;
+        // Добавляем флаг &mode=guest, чтобы скрыть кнопку редактирования
+        const url = baseUrl + '#data=' + encodedData + '&mode=guest';
         
         const el = document.createElement('textarea'); el.value = url; document.body.appendChild(el); el.select();
         document.execCommand('copy'); document.body.removeChild(el);
-        alert("Ссылка скопирована! Она откроет это расписание на любом устройстве.");
+        alert("Ссылка для коллег скопирована! У них не будет кнопок редактирования.");
     }
 
     function shareAsText() {
@@ -222,15 +233,22 @@
 
     window.onload = () => {
         syncSelects();
-        if(window.location.hash) {
+        const hash = window.location.hash;
+        if(hash && hash.includes('data=')) {
             try {
-                const base64 = window.location.hash.substring(1);
-                const decodedData = JSON.parse(decodeURIComponent(escape(atob(base64))));
+                // Извлекаем данные между 'data=' и возможным '&'
+                const rawData = hash.split('data=')[1].split('&')[0];
+                const decodedData = JSON.parse(decodeURIComponent(escape(atob(rawData))));
                 applyData(decodedData);
                 toggleView(true);
-            } catch(e) { console.error("Ошибка чтения хеша", e); }
+                
+                // Если есть флаг гостя — блокируем возврат в редактор
+                if(hash.includes('mode=guest')) {
+                    document.body.classList.add('guest-mode');
+                }
+            } catch(e) { console.error("Ошибка чтения данных", e); }
         } else {
-            const s = JSON.parse(localStorage.getItem('church_v26'));
+            const s = JSON.parse(localStorage.getItem('church_v27'));
             if(s) applyData(s);
         }
     };
