@@ -3,38 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Собор: Расписание v29</title>
+    <title>Собор: Расписание v31</title>
     <style>
         :root { --blue: #1a365d; --green: #27ae60; --orange: #f39c12; --gray: #f8f9fa; }
         body { font-family: -apple-system, sans-serif; background: #e9ecef; margin: 0; padding: 10px; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--blue); font-size: 1.3rem; text-transform: uppercase; }
+        h1 { text-align: center; color: var(--blue); font-size: 1.3rem; text-transform: uppercase; margin: 5px 0; }
         details summary { padding: 12px; background: var(--blue); color: white; border-radius: 8px; cursor: pointer; font-weight: bold; list-style: none; }
         .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         input, select { padding: 10px; border: 2px solid #ced4da; border-radius: 8px; font-weight: 900; font-size: 15px; width: 100%; box-sizing: border-box; }
+        
+        /* Карточки для экрана */
         .day-card { background: white; border: 2px solid #343a40; margin-bottom: 12px; border-radius: 10px; overflow: hidden; }
-        .day-header { background: #343a40; color: white; padding: 8px; text-align: center; font-weight: 900; }
-        .day-body { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .day-header { background: #343a40; color: white; padding: 8px; text-align: center; font-weight: 900; font-size: 14px; }
+        .day-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        
         .service-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .service-col { display: flex; flex-direction: column; gap: 4px; }
         .label-min { font-size: 10px; color: #6c757d; text-transform: uppercase; font-weight: bold; }
-        .fest-grid { display: grid; grid-template-columns: 1fr; gap: 15px; padding: 15px; }
+        
+        .fest-grid { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 10px; }
         @media (min-width: 600px) { .fest-grid { grid-template-columns: 1fr 1fr; } }
-        .morning-row, .evening-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-        .vk-box { background: #f0f2f5; border: 2px dashed var(--blue); padding: 10px; border-radius: 10px; margin-bottom: 20px; }
-        .controls-sticky { position: sticky; bottom: 10px; background: white; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; border-radius: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); margin-top: 20px; z-index: 100; }
-        .btn { flex: 1; min-width: 100px; padding: 12px; font-weight: 900; border: none; border-radius: 8px; font-size: 10px; color: white; cursor: pointer; text-transform: uppercase; }
+        
+        .morning-row, .evening-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+        .vk-box { background: #f0f2f5; border: 2px dashed var(--blue); padding: 10px; border-radius: 10px; margin-bottom: 15px; }
+        
+        .controls-sticky { position: sticky; bottom: 10px; background: white; padding: 10px; display: flex; flex-wrap: wrap; gap: 6px; border-radius: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); margin-top: 20px; z-index: 100; }
+        .btn { flex: 1; min-width: 80px; padding: 12px; font-weight: 900; border: none; border-radius: 8px; font-size: 10px; color: white; cursor: pointer; text-transform: uppercase; }
         .btn-save { background: var(--blue); }
         .btn-view { background: var(--orange); }
+        .btn-print { background: #34495e; }
         .btn-share-link { background: #2980b9; }
         .btn-share-text { background: var(--green); }
-        .btn-add { background: #6f42c1; width: 100%; margin: 15px 0; }
+        .btn-add { background: #6f42c1; width: 100%; margin: 10px 0; }
         .del-btn { position: absolute; top: 5px; right: 5px; background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 4px 8px; }
+        
         body.view-only .no-print, body.view-only .del-btn, body.view-only .controls-sticky, body.view-only .btn-add { display: none !important; }
-        body.view-only select { border: none !important; background: none !important; appearance: none; pointer-events: none; font-size: 16px; color: black !important; padding: 0; font-weight: 900; }
-        .exit-viewer { display: none; text-align: center; margin: 20px 0; color: var(--blue); font-weight: bold; cursor: pointer; text-decoration: underline; }
+        body.view-only select { border: none !important; background: none !important; appearance: none; pointer-events: none; font-size: 14px; color: black !important; padding: 0; font-weight: 900; }
+        .exit-viewer { display: none; text-align: center; margin: 15px 0; color: var(--blue); font-weight: bold; cursor: pointer; text-decoration: underline; }
         body.view-only .exit-viewer { display: block !important; }
         body.guest-mode .exit-viewer { display: none !important; }
+
+        /* УМНАЯ ПЕЧАТЬ (А4 ОДИН ЛИСТ) */
+        @media print {
+            @page { size: A4 portrait; margin: 8mm; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; border: none; }
+            .no-print, .controls-sticky, .btn-add, .del-btn, .exit-viewer { display: none !important; }
+            
+            h1 { font-size: 14pt; margin-bottom: 5px; color: black !important; }
+            
+            /* Воскресенье на всю ширину, но компактно */
+            #sunday-special .day-card { border: 1.5pt solid black !important; margin-bottom: 5px; }
+            #sun-container { grid-template-columns: 1fr 1.2fr !important; gap: 15px !important; padding: 5px !important; }
+            
+            /* Сетка для будней в две колонки */
+            #main-schedule { 
+                display: grid !important; 
+                grid-template-columns: 1fr 1fr !important; 
+                gap: 5pt !important; 
+            }
+            
+            .day-card { border: 1pt solid black !important; margin-bottom: 0 !important; border-radius: 0 !important; page-break-inside: avoid; }
+            .day-header { background: #f0f0f0 !important; color: black !important; border-bottom: 1pt solid black; padding: 2pt !important; font-size: 10pt !important; }
+            .day-body { padding: 4pt !important; gap: 4pt !important; }
+            
+            .vk-box { border: 1pt dashed black !important; padding: 4pt !important; margin-bottom: 5pt !important; background: none !important; }
+            
+            select { border: none !important; appearance: none; font-size: 9pt !important; font-weight: bold !important; color: black !important; background: none !important; padding: 0 !important; }
+            .label-min { font-size: 7pt !important; color: #333 !important; }
+            
+            .service-row { gap: 4pt !important; }
+            .morning-row, .evening-grid { gap: 4pt !important; margin-bottom: 2pt !important; }
+            
+            strong { font-size: 9pt; }
+        }
     </style>
 </head>
 <body>
@@ -67,14 +110,14 @@
     <div id="main-schedule"></div>
 
     <div id="fest-section">
-        <h2 style="text-align:center; color: var(--blue);">🎊 Праздники</h2>
-        <button class="btn btn-add no-print" onclick="addFest()">+ Добавить праздник</button>
         <div id="fest-container"></div>
+        <button class="btn btn-add no-print" onclick="addFest()">+ Добавить праздник</button>
     </div>
 
     <div class="controls-sticky no-print">
         <button id="save-btn" class="btn btn-save" onclick="save()">💾 Сохр</button>
         <button class="btn btn-view" onclick="toggleView(true)">👁️ Вид</button>
+        <button class="btn btn-print" onclick="window.print()">🖨️ Печать</button>
         <button class="btn btn-share-link" onclick="shareAsLink()">🔗 Ссылка</button>
         <button class="btn btn-share-text" onclick="shareAsText()">📝 Текст</button>
     </div>
@@ -98,24 +141,22 @@
                 <div class="day-header">${d} <span id="date-${i+1}"></span></div>
                 <div class="day-body">
                     <div class="service-row"><div class="service-col"><span class="label-min">Вечер</span><select class="w-type" style="color: var(--blue);">${serviceTypes.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div><div class="service-col"><span class="label-min">Утро</span><select class="w-priest"></select></div></div>
-                    <div><span class="label-min">Требный</span><select class="w-treb"></select></div>
-                    <div><span class="label-min">Дежурный</span><select class="w-dezh"></select></div>
+                    <div class="service-row"><div><span class="label-min">Требный</span><select class="w-treb"></select></div><div><span class="label-min">Дежурный</span><select class="w-dezh"></select></div></div>
                 </div>
             </div>`;
     });
 
     function getEveningHTML(className) {
-        return `<div style="margin-bottom:8px;"><span class="label-min">${rolesEvTop}</span><select class="${className}"></select></div>
+        return `<div style="margin-bottom:4px;"><span class="label-min">${rolesEvTop}</span><select class="${className}"></select></div>
                 <div class="evening-grid">${rolesEvGrid.map(r => `<div><span class="label-min">${r}</span><select class="${className}"></select></div>`).join('')}</div>`;
     }
 
     document.getElementById('sun-container').innerHTML = `
-        <div><strong>Вечер (Суббота):</strong>${getEveningHTML('sun-sel')}</div>
-        <div><strong>Утро:</strong>
-            <div class="morning-row"><div><span class="label-min">Ранняя Лит.</span><select class="sun-sel"></select></div><div><span class="label-min">Требный</span><select class="sun-sel"></select></div></div>
-            <div class="morning-row"><div><span class="label-min">Поздняя Лит.</span><select class="sun-sel"></select></div><div><span class="label-min">Требный</span><select class="sun-sel"></select></div></div>
-            <div style="margin-bottom:8px;"><span class="label-min">Проповедь</span><select class="sun-sel"></select></div>
-            <div><span class="label-min">Панихида (утро)</span><select class="sun-sel"></select></div>
+        <div><strong>Суббота (Вечер):</strong>${getEveningHTML('sun-sel')}</div>
+        <div><strong>Воскресенье (Утро):</strong>
+            <div class="morning-row"><div><span class="label-min">Ранняя</span><select class="sun-sel"></select></div><div><span class="label-min">Требный</span><select class="sun-sel"></select></div></div>
+            <div class="morning-row"><div><span class="label-min">Поздняя</span><select class="sun-sel"></select></div><div><span class="label-min">Требный</span><select class="sun-sel"></select></div></div>
+            <div class="morning-row"><div><span class="label-min">Проповедь</span><select class="sun-sel"></select></div><div><span class="label-min">Панихида</span><select class="sun-sel"></select></div></div>
         </div>`;
 
     function syncSelects() {
@@ -139,8 +180,7 @@
                 <div><strong>Утро праздника:</strong>
                     <div class="morning-row"><div><span class="label-min">Ранняя Лит.</span><select class="f-sel"></select></div><div><span class="label-min">Требный</span><select class="f-sel"></select></div></div>
                     <div class="morning-row"><div><span class="label-min">Поздняя Лит.</span><select class="f-sel"></select></div><div><span class="label-min">Требный</span><select class="f-sel"></select></div></div>
-                    <div><span class="label-min">Проповедь</span><select class="f-sel"></select></div>
-                    <div><span class="label-min">Панихида</span><select class="f-sel"></select></div>
+                    <div class="morning-row"><div><span class="label-min">Проповедь</span><select class="f-sel"></select></div><div><span class="label-min">Панихида</span><select class="f-sel"></select></div></div>
                 </div>
             </div>`;
         document.getElementById('fest-container').appendChild(div);
@@ -189,7 +229,7 @@
     }
 
     function save() {
-        localStorage.setItem('church_v29', JSON.stringify(collectData()));
+        localStorage.setItem('church_v31', JSON.stringify(collectData()));
         const b = document.getElementById('save-btn'); b.innerText = '✅ ОК';
         setTimeout(() => b.innerText = '💾 СОХР', 1000);
     }
@@ -212,59 +252,20 @@
     function shareAsText() {
         const data = collectData();
         let m = `📋 *РАСПИСАНИЕ СОБОРА*\n`;
-        
-        if(data.d) {
-            const start = new Date(data.d);
-            m += `📅 Неделя с ${start.toLocaleDateString('ru-RU')}\n`;
-        } else {
-            m += `📅 Неделя (дата не указана)\n`;
-        }
-        
+        if(data.d) { m += `📅 Неделя с ${new Date(data.d).toLocaleDateString('ru-RU')}\n`; }
         m += `🤫 *Неделя ВК:* ${data.vk || '—'}\n\n`;
-
-        // 1. Воскресенье
-        m += `⛪ *ВОСКРЕСЕНЬЕ*\n`;
-        m += `• Вечер: ${data.sun[0] || '—'}\n`;
+        m += `⛪ *ВОСКРЕСЕНЬЕ*\n• Вечер: ${data.sun[0] || '—'}\n`;
         rolesEvGrid.forEach((r, i) => m += `• ${r}: ${data.sun[i+1] || '—'}\n`);
         rolesMorSun.forEach((r, i) => m += `• ${r}: ${data.sun[i+5] || '—'}\n`);
         m += `\n`;
-
-        // 2. Будни
         weekdayNames.forEach((name, i) => {
-            let dateLabel = "";
-            if(data.d) {
-                const dateObj = new Date(data.d);
-                dateObj.setDate(dateObj.getDate() + i + 1);
-                dateLabel = ` (${dateObj.toLocaleDateString('ru-RU', {day:'numeric', month:'short'})})`;
-            }
-            m += `📅 *${name.toUpperCase()}*${dateLabel}\n`;
+            m += `📅 *${name.toUpperCase()}*\n`;
             if(data.wt[i]) m += `• Вечер: ${data.wt[i]}\n`;
-            m += `• Утро: ${data.wp[i] || '—'}\n`;
-            m += `• Требный: ${data.wtr[i] || '—'}\n`;
-            m += `• Дежурный: ${data.wd[i] || '—'}\n\n`;
+            m += `• Утро: ${data.wp[i] || '—'}\n• Требный: ${data.wtr[i] || '—'}\n• Дежурный: ${data.wd[i] || '—'}\n\n`;
         });
-
-        // 3. Праздники
-        if(data.f && data.f.length > 0) {
-            m += `🎊 *ПРАЗДНИКИ:*\n`;
-            data.f.forEach(f => {
-                m += `✨ ${f.t.toUpperCase()}:\n`;
-                m += `• Вечер: ${f.r[0] || '—'}\n`;
-                m += `• Утро: ${f.r[5] || '—'}\n\n`;
-            });
-        }
-
-        try {
-            const el = document.createElement('textarea');
-            el.value = m;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            alert("Весь текст скопирован!");
-        } catch (err) {
-            alert("Ошибка копирования. Попробуйте еще раз.");
-        }
+        const el = document.createElement('textarea'); el.value = m; document.body.appendChild(el); el.select();
+        document.execCommand('copy'); document.body.removeChild(el);
+        alert("Текст скопирован!");
     }
 
     window.onload = () => {
@@ -279,7 +280,7 @@
                 if(hash.includes('mode=guest')) document.body.classList.add('guest-mode');
             } catch(e) { console.error(e); }
         } else {
-            const s = JSON.parse(localStorage.getItem('church_v29'));
+            const s = JSON.parse(localStorage.getItem('church_v31'));
             if(s) applyData(s);
         }
     };
