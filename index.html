@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Собор: Расписание v27</title>
+    <title>Собор: Расписание v29</title>
     <style>
         :root { --blue: #1a365d; --green: #27ae60; --orange: #f39c12; --gray: #f8f9fa; }
         body { font-family: -apple-system, sans-serif; background: #e9ecef; margin: 0; padding: 10px; }
@@ -30,15 +30,10 @@
         .btn-share-text { background: var(--green); }
         .btn-add { background: #6f42c1; width: 100%; margin: 15px 0; }
         .del-btn { position: absolute; top: 5px; right: 5px; background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 4px 8px; }
-        
-        /* Стили для режима просмотра */
         body.view-only .no-print, body.view-only .del-btn, body.view-only .controls-sticky, body.view-only .btn-add { display: none !important; }
         body.view-only select { border: none !important; background: none !important; appearance: none; pointer-events: none; font-size: 16px; color: black !important; padding: 0; font-weight: 900; }
-        
         .exit-viewer { display: none; text-align: center; margin: 20px 0; color: var(--blue); font-weight: bold; cursor: pointer; text-decoration: underline; }
         body.view-only .exit-viewer { display: block !important; }
-        
-        /* Специальный класс для полной блокировки (скрывает даже кнопку выхода) */
         body.guest-mode .exit-viewer { display: none !important; }
     </style>
 </head>
@@ -91,6 +86,7 @@
     const serviceTypes = ["", "Полиелей (служ.)", "Полиелей (все)", "Всенощная (все)"];
     const rolesEvTop = "Всенощная";
     const rolesEvGrid = ["Исповедь", "Панихида", "Помазание 1", "Помазание 2"];
+    const rolesMorSun = ["Ранняя Лит.", "Требный (ран)", "Поздняя Лит.", "Требный (позд)", "Проповедь", "Панихида (утро)"];
 
     const pContainer = document.getElementById('p-inputs');
     for(let i=0; i<10; i++) pContainer.innerHTML += `<input type="text" class="p-input" placeholder="Отец ${i+1}" oninput="syncSelects()">`;
@@ -193,42 +189,82 @@
     }
 
     function save() {
-        localStorage.setItem('church_v27', JSON.stringify(collectData()));
+        localStorage.setItem('church_v29', JSON.stringify(collectData()));
         const b = document.getElementById('save-btn'); b.innerText = '✅ ОК';
         setTimeout(() => b.innerText = '💾 СОХР', 1000);
     }
 
     function toggleView(isView) {
-        if(isView) { 
-            document.body.classList.add('view-only'); 
-            document.getElementById('main-title').innerText = "РАСПИСАНИЕ (ПРОСМОТР)"; 
-            window.scrollTo(0,0); 
-        } else { 
-            document.body.classList.remove('view-only'); 
-            document.getElementById('main-title').innerText = "Расписание Собора"; 
-        }
+        if(isView) { document.body.classList.add('view-only'); document.getElementById('main-title').innerText = "РАСПИСАНИЕ (ПРОСМОТР)"; window.scrollTo(0,0); }
+        else { document.body.classList.remove('view-only'); document.getElementById('main-title').innerText = "Расписание Собора"; }
     }
 
     function shareAsLink() {
         const data = JSON.stringify(collectData());
         const encodedData = btoa(unescape(encodeURIComponent(data)));
         const baseUrl = window.location.href.split('#')[0];
-        // Добавляем флаг &mode=guest, чтобы скрыть кнопку редактирования
         const url = baseUrl + '#data=' + encodedData + '&mode=guest';
-        
         const el = document.createElement('textarea'); el.value = url; document.body.appendChild(el); el.select();
         document.execCommand('copy'); document.body.removeChild(el);
-        alert("Ссылка для коллег скопирована! У них не будет кнопок редактирования.");
+        alert("Ссылка для коллег скопирована!");
     }
 
     function shareAsText() {
         const data = collectData();
-        const start = data.d ? new Date(data.d) : null;
-        let m = `📋 *РАСПИСАНИЕ СОБОРА*\n📅 Неделя с ${start ? start.toLocaleDateString('ru-RU') : '??'}\n\n`;
-        m += `🤫 *Неделя ВК:* ${data.vk || '—'}\n\n⛪ *ВОСКРЕСЕНЬЕ*\n • Всенощная: ${data.sun[0] || '—'}\n` + 
-             rolesEvGrid.map((r, i) => ` • ${r}: ${data.sun[i+1] || '—'}`).join('\n') + `\n\n`;
-        const el = document.createElement('textarea'); el.value = m; document.body.appendChild(el); el.select();
-        document.execCommand('copy'); document.body.removeChild(el); alert("Текст скопирован!");
+        let m = `📋 *РАСПИСАНИЕ СОБОРА*\n`;
+        
+        if(data.d) {
+            const start = new Date(data.d);
+            m += `📅 Неделя с ${start.toLocaleDateString('ru-RU')}\n`;
+        } else {
+            m += `📅 Неделя (дата не указана)\n`;
+        }
+        
+        m += `🤫 *Неделя ВК:* ${data.vk || '—'}\n\n`;
+
+        // 1. Воскресенье
+        m += `⛪ *ВОСКРЕСЕНЬЕ*\n`;
+        m += `• Вечер: ${data.sun[0] || '—'}\n`;
+        rolesEvGrid.forEach((r, i) => m += `• ${r}: ${data.sun[i+1] || '—'}\n`);
+        rolesMorSun.forEach((r, i) => m += `• ${r}: ${data.sun[i+5] || '—'}\n`);
+        m += `\n`;
+
+        // 2. Будни
+        weekdayNames.forEach((name, i) => {
+            let dateLabel = "";
+            if(data.d) {
+                const dateObj = new Date(data.d);
+                dateObj.setDate(dateObj.getDate() + i + 1);
+                dateLabel = ` (${dateObj.toLocaleDateString('ru-RU', {day:'numeric', month:'short'})})`;
+            }
+            m += `📅 *${name.toUpperCase()}*${dateLabel}\n`;
+            if(data.wt[i]) m += `• Вечер: ${data.wt[i]}\n`;
+            m += `• Утро: ${data.wp[i] || '—'}\n`;
+            m += `• Требный: ${data.wtr[i] || '—'}\n`;
+            m += `• Дежурный: ${data.wd[i] || '—'}\n\n`;
+        });
+
+        // 3. Праздники
+        if(data.f && data.f.length > 0) {
+            m += `🎊 *ПРАЗДНИКИ:*\n`;
+            data.f.forEach(f => {
+                m += `✨ ${f.t.toUpperCase()}:\n`;
+                m += `• Вечер: ${f.r[0] || '—'}\n`;
+                m += `• Утро: ${f.r[5] || '—'}\n\n`;
+            });
+        }
+
+        try {
+            const el = document.createElement('textarea');
+            el.value = m;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            alert("Весь текст скопирован!");
+        } catch (err) {
+            alert("Ошибка копирования. Попробуйте еще раз.");
+        }
     }
 
     window.onload = () => {
@@ -236,19 +272,14 @@
         const hash = window.location.hash;
         if(hash && hash.includes('data=')) {
             try {
-                // Извлекаем данные между 'data=' и возможным '&'
                 const rawData = hash.split('data=')[1].split('&')[0];
                 const decodedData = JSON.parse(decodeURIComponent(escape(atob(rawData))));
                 applyData(decodedData);
                 toggleView(true);
-                
-                // Если есть флаг гостя — блокируем возврат в редактор
-                if(hash.includes('mode=guest')) {
-                    document.body.classList.add('guest-mode');
-                }
-            } catch(e) { console.error("Ошибка чтения данных", e); }
+                if(hash.includes('mode=guest')) document.body.classList.add('guest-mode');
+            } catch(e) { console.error(e); }
         } else {
-            const s = JSON.parse(localStorage.getItem('church_v27'));
+            const s = JSON.parse(localStorage.getItem('church_v29'));
             if(s) applyData(s);
         }
     };
